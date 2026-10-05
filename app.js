@@ -335,7 +335,7 @@ function finishSignalGeneration() {
     tg.HapticFeedback.notificationOccurred('success');
   }
 
-  startTimer(20);
+  startTimer(15);
 }
 
 function startTimer(seconds) {
