@@ -31,25 +31,50 @@ let isFlying = false;
 // Счётчик кликов
 let totalSpins = 0;
 
-// Генерация звёзд
+// Звёзды
 const stars = [];
+
+// Вспомогательная функция для получения логической ширины и высоты
+function getCanvasSize() {
+  const dpr = window.devicePixelRatio || 1;
+  return {
+    width: canvas.width / dpr,
+    height: canvas.height / dpr
+  };
+}
+
+// Настройка разрешения Canvas под Retina (iPhone)
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+
+  // Задаем реальное физическое разрешение Canvas
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  // Оставляем визуальный CSS-размер
+  canvas.style.width = `${rect.width}px`;
+  canvas.style.height = `${rect.height}px`;
+
+  // Масштабируем контекст отрисовки
+  ctx.scale(dpr, dpr);
+
+  generateStars();
+}
+
 function generateStars() {
+  const { width, height } = getCanvasSize();
   stars.length = 0;
   for (let i = 0; i < 20; i++) {
     stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * (canvas.height - 80),
+      x: Math.random() * width,
+      y: Math.random() * (height - 80),
       size: Math.random() * 3 + 2,
       opacity: Math.random() * 0.7 + 0.3
     });
   }
 }
 
-function resizeCanvas() {
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
-  generateStars();
-}
 resizeCanvas();
 
 // Переход к графику
@@ -80,10 +105,11 @@ function resetState() {
 }
 
 function getEndCoords() {
+  const { width, height } = getCanvasSize();
   return {
     startX: 10,
-    startY: canvas.height - 35,
-    endX: canvas.width - 55,
+    startY: height - 35,
+    endX: width - 55,
     endY: 55
   };
 }
@@ -104,23 +130,25 @@ function drawStars() {
 
 // Отрисовка облаков
 function drawClouds() {
+  const { height } = getCanvasSize();
   ctx.fillStyle = '#18132e';
 
   ctx.beginPath();
-  ctx.arc(-20, canvas.height + 10, 65, 0, Math.PI * 2);
-  ctx.arc(40, canvas.height + 5, 50, 0, Math.PI * 2);
-  ctx.arc(100, canvas.height + 15, 55, 0, Math.PI * 2);
-  ctx.arc(170, canvas.height, 60, 0, Math.PI * 2);
-  ctx.arc(240, canvas.height + 10, 50, 0, Math.PI * 2);
-  ctx.arc(310, canvas.height + 5, 65, 0, Math.PI * 2);
-  ctx.arc(380, canvas.height + 15, 55, 0, Math.PI * 2);
-  ctx.arc(440, canvas.height + 10, 60, 0, Math.PI * 2);
+  ctx.arc(-20, height + 10, 65, 0, Math.PI * 2);
+  ctx.arc(40, height + 5, 50, 0, Math.PI * 2);
+  ctx.arc(100, height + 15, 55, 0, Math.PI * 2);
+  ctx.arc(170, height, 60, 0, Math.PI * 2);
+  ctx.arc(240, height + 10, 50, 0, Math.PI * 2);
+  ctx.arc(310, height + 5, 65, 0, Math.PI * 2);
+  ctx.arc(380, height + 15, 55, 0, Math.PI * 2);
+  ctx.arc(440, height + 10, 60, 0, Math.PI * 2);
   ctx.fill();
 }
 
 // Главная функция отрисовки
 function drawScene(progress, multiplier) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const { width, height } = getCanvasSize();
+  ctx.clearRect(0, 0, width, height);
 
   drawStars();
   drawClouds();
@@ -144,11 +172,11 @@ function drawScene(progress, multiplier) {
       ctx.lineTo(stepX, stepY);
     }
 
-    ctx.lineTo(currentX, canvas.height);
-    ctx.lineTo(startX, canvas.height);
+    ctx.lineTo(currentX, height);
+    ctx.lineTo(startX, height);
     ctx.closePath();
 
-    const fillGradient = ctx.createLinearGradient(0, currentY, 0, canvas.height);
+    const fillGradient = ctx.createLinearGradient(0, currentY, 0, height);
     fillGradient.addColorStop(0, 'rgba(139, 92, 246, 0.35)');
     fillGradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
     ctx.fillStyle = fillGradient;
@@ -180,7 +208,7 @@ function drawScene(progress, multiplier) {
     
     ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
     ctx.shadowBlur = 12;
-    ctx.fillText(`x${multiplier.toFixed(2)}`, canvas.width * 0.38, canvas.height / 2 - 5);
+    ctx.fillText(`x${multiplier.toFixed(2)}`, width * 0.38, height / 2 - 5);
     ctx.shadowBlur = 0;
   }
 
@@ -239,6 +267,11 @@ function getRandomPrecision() {
 btnGenerate.addEventListener('click', () => {
   if (btnGenerate.disabled) return;
 
+  // Легкая вибрация при клике
+  if (tg?.HapticFeedback) {
+    tg.HapticFeedback.impactOccurred('medium');
+  }
+
   btnGenerate.disabled = true;
   signalCard.classList.add('hidden');
   loadingOverlay.classList.remove('hidden');
@@ -292,7 +325,7 @@ function finishSignalGeneration() {
 
   signalCard.classList.remove('hidden');
 
-  // Вибрация "успех" при появлении сигнала
+  // Вибрация успеха при появлении сигнала
   if (tg?.HapticFeedback) {
     tg.HapticFeedback.notificationOccurred('success');
   }
@@ -312,8 +345,6 @@ function startTimer(seconds) {
       clearInterval(timerInterval);
       signalCard.classList.add('hidden');
       drawScene(0, 1.00);
-      
-      // Разблокировка кнопки после завершения таймера
       btnGenerate.disabled = false;
     }
   }, 1000);
