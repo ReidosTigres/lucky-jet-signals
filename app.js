@@ -24,6 +24,9 @@ sammyImg.src = 'assets/sammy.png';
 let animationFrameId;
 let timerInterval;
 
+// Глобальное отслеживание состояния таймера
+let timerLeftSeconds = 0;
+
 let currentMultiplier = 1.00;
 let targetMultiplier = 1.00;
 let isFlying = false;
@@ -81,26 +84,33 @@ btnStart.addEventListener('click', () => {
   mainMenu.classList.remove('active');
   gameScreen.classList.add('active');
   resizeCanvas();
-  resetState();
+  syncScreenState();
 });
 
 // Кнопка назад в главное меню
 btnBack.addEventListener('click', () => {
   gameScreen.classList.remove('active');
   mainMenu.classList.add('active');
-  resetState();
 });
 
-function resetState() {
-  clearInterval(timerInterval);
+// Синхронизация состояния при переключении экранов (БЕЗ сброса активного таймера)
+function syncScreenState() {
+  // Если идет полёт/анимация, останавливаем её
   cancelAnimationFrame(animationFrameId);
   isFlying = false;
-  currentMultiplier = 1.00;
-  targetMultiplier = 1.00;
-  signalCard.classList.add('hidden');
   loadingOverlay.classList.add('hidden');
-  btnGenerate.disabled = false;
-  drawScene(0, 1.00);
+
+  // Если таймер ещё активен, сохраняем карточку и заблокированную кнопку
+  if (timerLeftSeconds > 0) {
+    signalCard.classList.remove('hidden');
+    btnGenerate.disabled = true;
+    drawScene(1.0, targetMultiplier);
+  } else {
+    // Если таймер завершён или не запускался
+    signalCard.classList.add('hidden');
+    btnGenerate.disabled = false;
+    drawScene(0, 1.00);
+  }
 }
 
 function getEndCoords() {
@@ -149,7 +159,6 @@ function drawScene(progress, multiplier) {
   const dpr = Math.max(window.devicePixelRatio || 1, 2);
   const { width, height } = getCanvasSize();
 
-  // Принудительная трансформация под Retina на каждый кадр
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   ctx.clearRect(0, 0, width, height);
@@ -203,7 +212,6 @@ function drawScene(progress, multiplier) {
     ctx.shadowBlur = 0;
   }
 
-  // Включаем максимальное качество отрисовки элементов
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -335,20 +343,21 @@ function finishSignalGeneration() {
     tg.HapticFeedback.notificationOccurred('success');
   }
 
-  // Меняем 20 на 15 секунд
   startTimer(15);
 }
 
 function startTimer(seconds) {
   clearInterval(timerInterval);
-  let left = seconds;
-  timerSec.innerText = left;
+  timerLeftSeconds = seconds;
+  timerSec.innerText = timerLeftSeconds;
 
   timerInterval = setInterval(() => {
-    left--;
-    timerSec.innerText = left;
-    if (left <= 0) {
+    timerLeftSeconds--;
+    timerSec.innerText = timerLeftSeconds;
+
+    if (timerLeftSeconds <= 0) {
       clearInterval(timerInterval);
+      timerLeftSeconds = 0;
       signalCard.classList.add('hidden');
       drawScene(0, 1.00);
       btnGenerate.disabled = false;
