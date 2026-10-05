@@ -335,6 +335,7 @@ function finishSignalGeneration() {
     tg.HapticFeedback.notificationOccurred('success');
   }
 
+  // Меняем 20 на 15 секунд
   startTimer(15);
 }
 
