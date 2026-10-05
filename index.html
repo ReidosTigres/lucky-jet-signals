@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lucky Jet Signal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+  <!-- Экран 1: Приветствие -->
+  <div id="main-menu" class="screen active">
+    <h1 class="welcome-title">BEM-VINDO AO BOT<br>LUCKY JET SIGNALS!🚀🍀</h1>
+    
+    <div class="logo-container">
+      <img id="hero-logo" src="assets/main_hero.png" alt="Lucky Jet Hero">
+    </div>
+
+    <button id="btn-start" class="btn-primary">OBTER SINAL 🚀</button>
+  </div>
+
+  <!-- Экран 2: Игра и Сигнал -->
+  <div id="game-screen" class="screen">
+    
+    <!-- Кнопка Назад -->
+    <button id="btn-back" class="btn-back" aria-label="Voltar">&lt;</button>
+
+    <div class="canvas-wrapper">
+      <canvas id="jetCanvas"></canvas>
+      
+      <!-- Спиннер загрузки -->
+      <div id="loading-overlay" class="overlay hidden">
+        <div class="spinner"></div>
+        <div id="loading-text" class="loading-status">ANÁLISE DAS RODADAS...</div>
+      </div>
+    </div>
+
+    <!-- Карточка со статусом -->
+    <div id="signal-card" class="signal-card hidden">
+      <div class="signal-label">SINAL CONFIRMADO ✅</div>
+      <div class="signal-precision">PRECISÃO DO SINAL: <span id="precision-val">98.4%</span></div>
+      <div class="signal-expiration">TEMPO DE DURAÇÃO DO SINAL: <span id="timer-sec">15</span>s</div>
+    </div>
+
+    <button id="btn-generate" class="btn-primary">CALCULAR O VALOR DE X</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
