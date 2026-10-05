@@ -34,30 +34,29 @@ let totalSpins = 0;
 // Звёзды
 const stars = [];
 
-// Вспомогательная функция для получения логической ширины и высоты
+// Логические размеры Canvas (для координирования)
 function getCanvasSize() {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.max(window.devicePixelRatio || 1, 2);
   return {
     width: canvas.width / dpr,
     height: canvas.height / dpr
   };
 }
 
-// Настройка разрешения Canvas под Retina (iPhone)
+// Адаптивный рендеринг под Retina (iPhone)
 function resizeCanvas() {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.max(window.devicePixelRatio || 1, 2);
   const rect = canvas.parentElement.getBoundingClientRect();
 
-  // Задаем реальное физическое разрешение Canvas
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
+  if (rect.width === 0 || rect.height === 0) return;
 
-  // Оставляем визуальный CSS-размер
+  // Физическое разрешение
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+
+  // CSS размер
   canvas.style.width = `${rect.width}px`;
   canvas.style.height = `${rect.height}px`;
-
-  // Масштабируем контекст отрисовки
-  ctx.scale(dpr, dpr);
 
   generateStars();
 }
@@ -147,7 +146,12 @@ function drawClouds() {
 
 // Главная функция отрисовки
 function drawScene(progress, multiplier) {
+  const dpr = Math.max(window.devicePixelRatio || 1, 2);
   const { width, height } = getCanvasSize();
+
+  // Принудительная трансформация под Retina на каждый кадр
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
   ctx.clearRect(0, 0, width, height);
 
   drawStars();
@@ -199,9 +203,13 @@ function drawScene(progress, multiplier) {
     ctx.shadowBlur = 0;
   }
 
+  // Включаем максимальное качество отрисовки элементов
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
   // Значение X слева
   if (isFlying || multiplier > 1.00) {
-    ctx.font = '900 42px "Segoe UI", sans-serif';
+    ctx.font = '900 42px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -225,7 +233,7 @@ function drawScene(progress, multiplier) {
   }
 }
 
-// Строгий порядок сообщений
+// Сообщения статуса
 const statusMessages = [
   "CONEXÃO AO SERVIDOR...",
   "ANÁLISE DAS RODADAS...",
@@ -257,7 +265,6 @@ function calculateSmartMultiplier() {
   return parseFloat(result.toFixed(2));
 }
 
-// Генерация точности от 97.0% до 98.5%
 function getRandomPrecision() {
   const precision = 97.0 + Math.random() * 1.5;
   return `${precision.toFixed(1)}%`;
@@ -267,7 +274,6 @@ function getRandomPrecision() {
 btnGenerate.addEventListener('click', () => {
   if (btnGenerate.disabled) return;
 
-  // Легкая вибрация при клике
   if (tg?.HapticFeedback) {
     tg.HapticFeedback.impactOccurred('medium');
   }
@@ -325,12 +331,11 @@ function finishSignalGeneration() {
 
   signalCard.classList.remove('hidden');
 
-  // Вибрация успеха при появлении сигнала
   if (tg?.HapticFeedback) {
     tg.HapticFeedback.notificationOccurred('success');
   }
 
-  startTimer(15);
+  startTimer(20);
 }
 
 function startTimer(seconds) {
